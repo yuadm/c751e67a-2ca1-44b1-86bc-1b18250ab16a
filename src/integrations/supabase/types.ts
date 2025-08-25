@@ -7,64 +7,13 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
+  // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
-      annual_appraisals: {
-        Row: {
-          action_career: string | null
-          action_plan: string | null
-          action_training: string | null
-          appraisal_date: string
-          comments_employee: string | null
-          comments_manager: string | null
-          created_at: string
-          id: string
-          job_title: string
-          ratings: Json
-          signature_employee: string
-          signature_manager: string
-          submitted_at: string
-          year: number
-        }
-        Insert: {
-          action_career?: string | null
-          action_plan?: string | null
-          action_training?: string | null
-          appraisal_date: string
-          comments_employee?: string | null
-          comments_manager?: string | null
-          created_at?: string
-          id?: string
-          job_title: string
-          ratings: Json
-          signature_employee: string
-          signature_manager: string
-          submitted_at?: string
-          year: number
-        }
-        Update: {
-          action_career?: string | null
-          action_plan?: string | null
-          action_training?: string | null
-          appraisal_date?: string
-          comments_employee?: string | null
-          comments_manager?: string | null
-          created_at?: string
-          id?: string
-          job_title?: string
-          ratings?: Json
-          signature_employee?: string
-          signature_manager?: string
-          submitted_at?: string
-          year?: number
-        }
-        Relationships: []
-      }
       application_documents: {
         Row: {
           application_id: string | null
@@ -782,84 +731,33 @@ export type Database = {
       }
       compliance_questions: {
         Row: {
-          allow_multiple_selection: boolean | null
-          comment_prompt: string | null
-          comment_required_for_no: boolean | null
-          comment_required_for_yes: boolean | null
-          conditional_logic: Json | null
           created_at: string
-          dynamic_generation_rule: Json | null
-          help_text: string | null
           id: string
           is_required: boolean
-          is_template: boolean | null
-          is_trigger_question: boolean | null
-          max_entities: number | null
           options: Json | null
           order_index: number
           question_text: string
           question_type: string
-          repeatable: boolean | null
-          repeating_template_id: string | null
-          requires_comment_on_no: boolean | null
-          requires_comment_on_yes: boolean | null
-          section: string | null
-          template_group: string | null
-          trigger_entity_label: string | null
           updated_at: string
         }
         Insert: {
-          allow_multiple_selection?: boolean | null
-          comment_prompt?: string | null
-          comment_required_for_no?: boolean | null
-          comment_required_for_yes?: boolean | null
-          conditional_logic?: Json | null
           created_at?: string
-          dynamic_generation_rule?: Json | null
-          help_text?: string | null
           id?: string
           is_required?: boolean
-          is_template?: boolean | null
-          is_trigger_question?: boolean | null
-          max_entities?: number | null
           options?: Json | null
           order_index?: number
           question_text: string
           question_type?: string
-          repeatable?: boolean | null
-          repeating_template_id?: string | null
-          requires_comment_on_no?: boolean | null
-          requires_comment_on_yes?: boolean | null
-          section?: string | null
-          template_group?: string | null
-          trigger_entity_label?: string | null
           updated_at?: string
         }
         Update: {
-          allow_multiple_selection?: boolean | null
-          comment_prompt?: string | null
-          comment_required_for_no?: boolean | null
-          comment_required_for_yes?: boolean | null
-          conditional_logic?: Json | null
           created_at?: string
-          dynamic_generation_rule?: Json | null
-          help_text?: string | null
           id?: string
           is_required?: boolean
-          is_template?: boolean | null
-          is_trigger_question?: boolean | null
-          max_entities?: number | null
           options?: Json | null
           order_index?: number
           question_text?: string
           question_type?: string
-          repeatable?: boolean | null
-          repeating_template_id?: string | null
-          requires_comment_on_no?: boolean | null
-          requires_comment_on_yes?: boolean | null
-          section?: string | null
-          template_group?: string | null
-          trigger_entity_label?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -915,8 +813,6 @@ export type Database = {
       compliance_responses: {
         Row: {
           created_at: string
-          dynamic_question_key: string | null
-          entity_reference: string | null
           id: string
           question_id: string
           questionnaire_response_id: string
@@ -925,8 +821,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          dynamic_question_key?: string | null
-          entity_reference?: string | null
           id?: string
           question_id: string
           questionnaire_response_id: string
@@ -935,8 +829,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          dynamic_question_key?: string | null
-          entity_reference?: string | null
           id?: string
           question_id?: string
           questionnaire_response_id?: string
@@ -944,6 +836,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "compliance_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_questions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "compliance_responses_questionnaire_response_id_fkey"
             columns: ["questionnaire_response_id"]
@@ -1563,138 +1462,6 @@ export type Database = {
           },
         ]
       }
-      reference_requests: {
-        Row: {
-          applicant_address: string
-          applicant_name: string
-          applicant_postcode: string
-          application_id: string
-          company_name: string | null
-          completed_at: string | null
-          created_at: string
-          expires_at: string
-          form_data: Json | null
-          id: string
-          is_expired: boolean | null
-          position_applied_for: string | null
-          reference_address: string | null
-          reference_company: string | null
-          reference_data: Json | null
-          reference_email: string
-          reference_name: string
-          reference_type: string
-          sent_at: string
-          status: string
-          submitted_at: string | null
-          token: string
-          updated_at: string
-        }
-        Insert: {
-          applicant_address: string
-          applicant_name: string
-          applicant_postcode: string
-          application_id: string
-          company_name?: string | null
-          completed_at?: string | null
-          created_at?: string
-          expires_at?: string
-          form_data?: Json | null
-          id?: string
-          is_expired?: boolean | null
-          position_applied_for?: string | null
-          reference_address?: string | null
-          reference_company?: string | null
-          reference_data?: Json | null
-          reference_email: string
-          reference_name: string
-          reference_type?: string
-          sent_at?: string
-          status?: string
-          submitted_at?: string | null
-          token: string
-          updated_at?: string
-        }
-        Update: {
-          applicant_address?: string
-          applicant_name?: string
-          applicant_postcode?: string
-          application_id?: string
-          company_name?: string | null
-          completed_at?: string | null
-          created_at?: string
-          expires_at?: string
-          form_data?: Json | null
-          id?: string
-          is_expired?: boolean | null
-          position_applied_for?: string | null
-          reference_address?: string | null
-          reference_company?: string | null
-          reference_data?: Json | null
-          reference_email?: string
-          reference_name?: string
-          reference_type?: string
-          sent_at?: string
-          status?: string
-          submitted_at?: string | null
-          token?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      repeating_question_templates: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          description: string | null
-          id: string
-          is_active: boolean
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      repeating_template_questions: {
-        Row: {
-          created_at: string
-          id: string
-          order_index: number
-          question_id: string
-          template_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          order_index?: number
-          question_id: string
-          template_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          order_index?: number
-          question_id?: string
-          template_id?: string
-        }
-        Relationships: []
-      }
       signed_documents: {
         Row: {
           completed_at: string
@@ -2139,16 +1906,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      backfill_annual_appraisal_responses: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      backfill_compliance_notes_responses: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
       calculate_archive_dates: {
-        Args: { base_year?: number; frequency: string }
+        Args: { frequency: string; base_year?: number }
         Returns: {
           archive_due_date: string
           download_available_date: string
@@ -2212,7 +1971,7 @@ export type Database = {
         Returns: string
       }
       increment: {
-        Args: { increment_amount: number; row_id: string }
+        Args: { row_id: string; increment_amount: number }
         Returns: number
       }
       is_admin_by_id: {
@@ -2223,20 +1982,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      run_historical_data_backfill: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       update_compliance_statuses: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
       user_has_permission: {
-        Args: { perm_key: string; perm_type: string; user_id: string }
+        Args: { user_id: string; perm_type: string; perm_key: string }
         Returns: boolean
       }
       verify_password: {
-        Args: { password_hash: string; password_input: string }
+        Args: { password_input: string; password_hash: string }
         Returns: boolean
       }
     }
