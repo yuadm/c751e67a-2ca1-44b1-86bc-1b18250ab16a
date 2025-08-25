@@ -18,6 +18,7 @@ import { ReviewSummary } from "@/components/job-application/ReviewSummary";
 import { DatePickerWithRange, DatePicker } from "@/components/ui/date-picker";
 import { DateRange } from "react-day-picker";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { TimeSlotsList } from "./TimeSlotsList";
 // Helper function to format dates from YYYY-MM-DD to MM/DD/YYYY
 const formatDateDisplay = (dateString: string | null | undefined): string => {
   if (!dateString) return 'Not provided';
@@ -1228,14 +1229,7 @@ function EditableApplicationContent({
               <label className="text-sm font-medium text-gray-500 mb-2 block">Time Slots</label>
               <div className="border rounded-lg p-4 space-y-3">
                 {safeEditData.availability?.timeSlots && Object.keys(safeEditData.availability.timeSlots).length > 0 ? (
-                  Object.entries(safeEditData.availability.timeSlots).map(([slot, days]) => (
-                    <div key={slot} className="flex items-center justify-between">
-                      <span className="font-medium">{slot}:</span>
-                       <div className="flex gap-2">
-                         {Array.isArray(days) ? days.join(', ') : String(days)}
-                       </div>
-                    </div>
-                  ))
+                  <TimeSlotsList timeSlots={safeEditData.availability.timeSlots} />
                 ) : (
                   <p className="text-sm text-muted-foreground">No time slots selected</p>
                 )}

@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { JobApplicationData } from './types';
+import { getTimeSlotMappings, mapTimeSlotIds } from '@/utils/timeSlotUtils';
 
 interface Props {
   data: JobApplicationData;
 }
 
 export function ReviewSummary({ data }: Props) {
+  const [timeSlotMappings, setTimeSlotMappings] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    getTimeSlotMappings().then(setTimeSlotMappings);
+  }, []);
+
   const pi = data.personalInfo || ({} as any);
   const av = data.availability || ({} as any);
   const ec = data.emergencyContact || ({} as any);
@@ -14,6 +21,9 @@ export function ReviewSummary({ data }: Props) {
   const skills = data.skillsExperience?.skills || {};
   const dec = data.declaration || ({} as any);
   const tp = data.termsPolicy || ({} as any);
+
+  // Map time slots to readable labels
+  const mappedTimeSlots = av.timeSlots ? mapTimeSlotIds(av.timeSlots, timeSlotMappings) : {};
 
   return (
     <div className="space-y-6">
@@ -47,13 +57,13 @@ export function ReviewSummary({ data }: Props) {
           <Field label="Hours per Week" value={av.hoursPerWeek} />
           <Field label="Right to Work (UK)" value={av.hasRightToWork} />
         </div>
-        {av.timeSlots && Object.keys(av.timeSlots).length > 0 && (
+        {Object.keys(mappedTimeSlots).length > 0 && (
           <div className="mt-3">
             <div className="text-sm text-muted-foreground">Selected Time Slots</div>
             <ul className="list-disc pl-5 mt-1">
-              {Object.entries(av.timeSlots).map(([slot, days]) => (
-                <li key={slot}>
-                  <span className="font-medium">{slot}:</span> {(Array.isArray(days) ? days : [days]).join(', ')}
+              {Object.entries(mappedTimeSlots).map(([slotLabel, days]) => (
+                <li key={slotLabel}>
+                  <span className="font-medium">{slotLabel}:</span> {(Array.isArray(days) ? days : [days]).join(', ')}
                 </li>
               ))}
             </ul>

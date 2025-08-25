@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { format, parseISO, isValid as isValidDateFns } from 'date-fns'
 import type { JobApplicationData } from '@/components/job-application/types'
+import { getTimeSlotMappings, mapTimeSlotIds } from '@/utils/timeSlotUtils'
 
 // Format date to DD-MM-YYYY regardless of input (YYYY-MM-DD, ISO, etc.)
 function formatDateDDMMYYYY(value?: string): string {
@@ -349,8 +350,11 @@ addSpacer(ctx, 10)
   const slotEntries = Object.entries(timeSlots)
   if (slotEntries.length) {
     drawText(ctx, 'Selected Time Slots', { bold: true })
-    const slotPairs = slotEntries.map(([slotId, days]) => [
-      String(slotId),
+    // Get time slot mappings
+    const timeSlotMappings = await getTimeSlotMappings()
+    const mappedTimeSlots = mapTimeSlotIds(timeSlots, timeSlotMappings)
+    const slotPairs = Object.entries(mappedTimeSlots).map(([slotLabel, days]) => [
+      String(slotLabel),
       Array.isArray(days) ? (days as string[]).join(', ') : String(days ?? ''),
     ]) as Array<[string, string]>
     renderTwoColGrid(ctx, slotPairs)
