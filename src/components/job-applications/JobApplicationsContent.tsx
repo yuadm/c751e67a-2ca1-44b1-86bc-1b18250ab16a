@@ -68,11 +68,12 @@ export function JobApplicationsContent() {
   const [pageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [statusOptions, setStatusOptions] = useState<string[]>(['new','reviewing','interviewed','accepted','rejected']);
-const { toast } = useToast();
-const { companySettings } = useCompany();
-useEffect(() => {
-  fetchStatusOptions();
-}, []);
+  const { toast } = useToast();
+  const { companySettings } = useCompany();
+  
+  useEffect(() => {
+    fetchStatusOptions();
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -542,6 +543,7 @@ function ApplicationDetails({
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(application);
   const { toast } = useToast();
+  const { companySettings } = useCompany();
 
   const toJobAppData = () => {
     const pi = application.personal_info || {};
