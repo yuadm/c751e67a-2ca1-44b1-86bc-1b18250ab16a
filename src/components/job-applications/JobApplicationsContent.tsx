@@ -1132,17 +1132,18 @@ function EditableApplicationContent({
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Willingness for Personal Care</label>
+              <label className="text-sm font-medium text-gray-500">Which personal care Are you willing to do?</label>
               <Select
                 value={safeEditData.personal_info?.personalCareWillingness || ''}
                 onValueChange={(value) => updatePersonalInfo('personalCareWillingness', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select willingness" />
+                  <SelectValue placeholder="Select personal care willingness" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="yes">Yes</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
+                <SelectContent className="bg-background border shadow-md z-50">
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="both">Both</SelectItem>
                 </SelectContent>
               </Select>
             </div>
