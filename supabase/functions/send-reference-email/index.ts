@@ -144,7 +144,7 @@ const handler = async (req: Request): Promise<Response> => {
         reference_email: referenceEmail,
         reference_name: referenceName,
         reference_type: referenceType,
-        reference_token: referenceToken,
+        token: referenceToken,
         reference_data: {
           company: referenceCompany,
           address: referenceAddress,
