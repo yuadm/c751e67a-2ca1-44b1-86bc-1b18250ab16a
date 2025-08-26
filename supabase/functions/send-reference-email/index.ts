@@ -33,6 +33,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const requestBody = await req.json();
+    console.log("Starting send-reference-email function with data:", requestBody);
+
     const { 
       applicationId,
       applicantName,
@@ -47,7 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
       companyName,
       referenceType,
       employmentDetails
-    }: ReferenceEmailRequest = await req.json();
+    }: ReferenceEmailRequest = requestBody;
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
