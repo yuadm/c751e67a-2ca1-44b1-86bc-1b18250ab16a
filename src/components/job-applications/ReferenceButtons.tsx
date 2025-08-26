@@ -94,7 +94,9 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
   const downloadCompletedReference = (completedRef: any) => {
     try {
       const applicantName = application.personal_info?.fullName || 'Unknown Applicant';
-      const pdf = generateReferencePDF(completedRef, applicantName);
+      const applicantDOB = application.personal_info?.dateOfBirth || 'Not provided';
+      const applicantPostcode = application.personal_info?.postcode || 'Not provided';
+      const pdf = generateReferencePDF(completedRef, applicantName, applicantDOB, applicantPostcode);
       
       const fileName = `reference-${completedRef.reference_name.replace(/\s+/g, '-')}-${applicantName.replace(/\s+/g, '-')}.pdf`;
       pdf.save(fileName);
