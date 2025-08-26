@@ -293,20 +293,40 @@ export async function generateJobApplicationPdf(
     blueColor: { r: 0.2, g: 0.4, b: 0.8 },
   }
 
-// Header with optional company logo
-if (options?.logoUrl) {
-  const img = await embedImageFromUrl(doc, options.logoUrl)
-  if (img) {
-    const maxW = 140
-    const maxH = 60
-    const scale = Math.min(maxW / img.width, maxH / img.height, 1)
-    const dw = img.width * scale
-    const dh = img.height * scale
-    const x = (page.getWidth() - dw) / 2
-    const y = page.getHeight() - ctx.margin - dh
-    page.drawImage(img, { x, y, width: dw, height: dh })
-    ctx.y = y - 10
+// Header with company logo and name
+let headerHeight = 0
+if (options?.logoUrl || options?.companyName) {
+  const headerY = page.getHeight() - ctx.margin
+  
+  if (options?.logoUrl) {
+    const img = await embedImageFromUrl(doc, options.logoUrl)
+    if (img) {
+      const maxW = 120
+      const maxH = 50
+      const scale = Math.min(maxW / img.width, maxH / img.height, 1)
+      const dw = img.width * scale
+      const dh = img.height * scale
+      const logoX = ctx.margin
+      const logoY = headerY - dh
+      page.drawImage(img, { x: logoX, y: logoY, width: dw, height: dh })
+      headerHeight = Math.max(headerHeight, dh)
+    }
   }
+  
+  if (options?.companyName) {
+    const companyNameSize = 18
+    const companyY = headerY - companyNameSize
+    page.drawText(options.companyName, {
+      x: options?.logoUrl ? ctx.margin + 130 : ctx.margin,
+      y: companyY,
+      size: companyNameSize,
+      font: boldFont,
+      color: rgb(0.2, 0.4, 0.8),
+    })
+    headerHeight = Math.max(headerHeight, companyNameSize + 5)
+  }
+  
+  ctx.y = headerY - headerHeight - 20
 }
 
 drawText(ctx, 'Job Application Summary', { bold: true, size: 16 })

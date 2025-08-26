@@ -49,7 +49,8 @@ export const generateReferencePDF = (
   applicantName: string,
   applicantDOB: string,
   applicantPostcode: string,
-  companyName: string = 'Company Name'
+  companyName: string = 'Company Name',
+  options?: { logoUrl?: string; companyName?: string }
 ) => {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -64,6 +65,22 @@ export const generateReferencePDF = (
     pdf.text(lines, x, y);
     return y + (lines.length * lineHeight);
   };
+
+  // Header with company logo and name
+  if (options?.logoUrl || options?.companyName) {
+    let headerHeight = 0;
+    const headerY = yPosition;
+    
+    if (options?.companyName) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      pdf.setTextColor(51, 102, 204); // Blue color
+      pdf.text(options.companyName, margin, yPosition);
+      headerHeight = Math.max(headerHeight, 20);
+    }
+    
+    yPosition += headerHeight + 10;
+  }
 
   // Header
   pdf.setFontSize(18);
@@ -264,7 +281,7 @@ export interface ManualReferenceInput {
   };
 }
 
-export const generateManualReferencePDF = (data: ManualReferenceInput) => {
+export const generateManualReferencePDF = (data: ManualReferenceInput, options?: { logoUrl?: string; companyName?: string }) => {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
@@ -272,6 +289,75 @@ export const generateManualReferencePDF = (data: ManualReferenceInput) => {
   const contentWidth = pageWidth - margin * 2;
   const lineHeight = 7;
   let y = 30;
+
+  // Helper function to embed image (PNG/JPG) from URL
+  const embedImageFromUrl = async (url: string) => {
+    try {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`Failed to fetch logo: ${res.status}`)
+      const contentType = res.headers.get('content-type') || ''
+      const buf = await res.arrayBuffer()
+      const bytes = new Uint8Array(buf)
+      // For jsPDF, we need to convert to base64
+      const base64 = btoa(String.fromCharCode(...bytes))
+      const dataUrl = `data:${contentType};base64,${base64}`
+      return dataUrl
+    } catch (e) {
+      console.warn('Logo embedding failed:', e)
+      return undefined
+    }
+  }
+
+  // Header with company logo and name
+  const addHeader = async () => {
+    if (options?.logoUrl || options?.companyName) {
+      let headerHeight = 0
+      const headerY = y
+      
+      if (options?.logoUrl) {
+        try {
+          const logoDataUrl = await embedImageFromUrl(options.logoUrl)
+          if (logoDataUrl) {
+            const maxW = 40
+            const maxH = 25
+            pdf.addImage(logoDataUrl, 'JPEG', margin, y, maxW, maxH)
+            headerHeight = Math.max(headerHeight, maxH)
+          }
+        } catch (e) {
+          console.warn('Failed to add logo to PDF:', e)
+        }
+      }
+      
+      if (options?.companyName) {
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(16)
+        pdf.setTextColor(51, 102, 204) // Blue color
+        pdf.text(options.companyName, options?.logoUrl ? margin + 45 : margin, y + 15)
+        headerHeight = Math.max(headerHeight, 20)
+      }
+      
+      y += headerHeight + 10
+    }
+  };
+
+  // Add header first (but we need to make it sync for jsPDF)
+  if (options?.logoUrl) {
+    // For jsPDF, we'll handle images differently - skip async for now
+    // Just add company name if provided
+    if (options?.companyName) {
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(16)
+      pdf.setTextColor(51, 102, 204) // Blue color
+      pdf.text(options.companyName, margin, y)
+      y += 25
+    }
+  } else if (options?.companyName) {
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(16)
+    pdf.setTextColor(51, 102, 204) // Blue color
+    pdf.text(options.companyName, margin, y)
+    y += 25
+  }
 
   const addWrappedText = (text: string, size = 11) => {
     pdf.setFontSize(size);
