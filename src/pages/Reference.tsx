@@ -36,7 +36,7 @@ export default function Reference() {
       </header>
       <main>
         {token ? (
-          <ReferenceForm token={token} />
+          <ReferenceForm />
         ) : (
           <div className="text-center py-8">
             <p className="text-muted-foreground">
