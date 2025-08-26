@@ -141,10 +141,17 @@ const handler = async (req: Request): Promise<Response> => {
       .from('reference_requests')
       .insert({
         application_id: applicationId,
+        applicant_name: applicantName,
+        applicant_address: applicantAddress,
+        applicant_postcode: applicantPostcode,
+        position_applied_for: positionAppliedFor,
         reference_email: referenceEmail,
         reference_name: referenceName,
+        reference_company: referenceCompany,
+        reference_address: referenceAddress,
+        company_name: safeCompanyName,
         reference_type: referenceType,
-        reference_token: referenceToken,
+        token: referenceToken,
         reference_data: {
           company: referenceCompany,
           address: referenceAddress,
