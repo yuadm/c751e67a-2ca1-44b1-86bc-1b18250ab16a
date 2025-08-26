@@ -794,10 +794,10 @@ try {
   );
 };
 
-// Separate component for editing to keep the existing detailed form layout
+// Editable Application Content Component
 function EditableApplicationContent({ 
   editData, 
-  setEditData, 
+  setEditData,
   onSendReferenceEmail 
 }: { 
   editData: any; 
