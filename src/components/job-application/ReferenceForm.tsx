@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,9 +25,11 @@ interface JobApplication {
   personal_info: any;
 }
 
-export function ReferenceForm() {
-  const location = useLocation();
-  const navigate = useNavigate();
+interface ReferenceFormProps {
+  token: string;
+}
+
+export function ReferenceForm({ token }: ReferenceFormProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -66,46 +67,72 @@ export function ReferenceForm() {
   });
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get('token');
-    
-    if (!token) {
-      toast({
-        title: "Invalid Link",
-        description: "This reference link is missing or invalid.",
-        variant: "destructive",
-      });
-      return;
+    if (token) {
+      fetchReferenceRequest(token);
     }
-    
-    fetchReferenceRequest(token);
-  }, [location.search]);
+  }, [token]);
 
   const fetchReferenceRequest = async (token: string) => {
     try {
-      // For demo purposes, set some mock data based on the token
-      const referenceType = token.includes('emp') ? 'employer' : 'character';
+      // Fetch reference request using the token
+      const { data: referenceData, error: refError } = await supabase
+        .from('reference_requests')
+        .select('*')
+        .eq('token', token)
+        .single();
+
+      if (refError) {
+        console.error('Reference request error:', refError);
+        toast({
+          title: "Invalid Link",
+          description: "This reference link is invalid or has expired.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if the request has expired
+      if (new Date(referenceData.expires_at) < new Date()) {
+        toast({
+          title: "Link Expired",
+          description: "This reference link has expired.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if already completed
+      if (referenceData.status === 'completed') {
+        setReferenceRequest(referenceData);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch the associated job application
+      const { data: applicationData, error: appError } = await supabase
+        .from('job_applications')
+        .select('*')
+        .eq('id', referenceData.application_id)
+        .single();
+
+      if (appError) {
+        console.error('Application error:', appError);
+        toast({
+          title: "Error",
+          description: "Failed to load application data.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setReferenceRequest(referenceData);
+      setApplication(applicationData);
       
-      setReferenceRequest({
-        id: 'ref-' + token.slice(0, 8),
-        application_id: 'app-123',
-        reference_type: referenceType,
-        reference_name: 'Reference Person',
-        reference_email: 'reference@example.com',
-        reference_data: {},
-        status: 'sent',
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      });
-
-      setApplication({
-        id: 'app-123',
-        personal_info: { fullName: 'Job Applicant' }
-      });
-
+      // Pre-fill form with existing data if available
       setFormData(prev => ({
         ...prev,
-        refereeEmail: 'reference@example.com',
-        refereeFullName: 'Reference Person'
+        refereeEmail: referenceData.reference_email,
+        refereeFullName: referenceData.reference_name
       }));
 
     } catch (error) {
@@ -127,27 +154,24 @@ export function ReferenceForm() {
     try {
       if (!referenceRequest) return;
 
-      // Create reference response using generic insert
-      const { error: responseError } = await supabase
-        .from('reference_responses' as any)
-        .insert({
-          request_id: referenceRequest.id,
-          response_data: formData,
-          completed_by_name: formData.refereeFullName,
-          completed_by_email: formData.refereeEmail
-        });
+      // Update the reference request with the form data and mark as completed
+      const { error: updateError } = await supabase
+        .from('reference_requests')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          form_data: formData
+        })
+        .eq('id', referenceRequest.id);
 
-      if (responseError) throw responseError;
-
-      // For demo purposes, just simulate success
-      // In real implementation, this would update the database
+      if (updateError) throw updateError;
 
       toast({
         title: "Reference Submitted",
         description: "Thank you for providing your reference. It has been submitted successfully.",
       });
 
-      // Show success message instead of navigating
+      // Update local state to show completion message
       setReferenceRequest(prev => prev ? { ...prev, status: 'completed' } : null);
 
     } catch (error) {
