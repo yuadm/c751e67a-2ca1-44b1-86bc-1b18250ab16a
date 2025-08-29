@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
-
+import DejaVuSansRegularUrl from '@/assets/fonts/dejavu/DejaVuSans.ttf';
+import DejaVuSansBoldUrl from '@/assets/fonts/dejavu/DejaVuSans-Bold.ttf';
 interface ReferenceData {
   refereeFullName: string;
   refereeJobTitle?: string;
@@ -50,14 +51,32 @@ interface CompanySettings {
   logo?: string;
 }
 
-export const generateReferencePDF = (
+// Load and register DejaVu fonts so Unicode checkboxes render correctly
+const toBase64 = (buf: ArrayBuffer) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const loadAndRegisterDejaVu = async (pdf: any) => {
+  try {
+    const regularBuf = await fetch(DejaVuSansRegularUrl).then(r => r.arrayBuffer());
+    const boldBuf = await fetch(DejaVuSansBoldUrl).then(r => r.arrayBuffer());
+    pdf.addFileToVFS('DejaVuSans.ttf', toBase64(regularBuf));
+    pdf.addFileToVFS('DejaVuSans-Bold.ttf', toBase64(boldBuf));
+    // Map DejaVu to 'helvetica' name so existing setFont calls keep working
+    pdf.addFont('DejaVuSans.ttf', 'helvetica', 'normal');
+    pdf.addFont('DejaVuSans-Bold.ttf', 'helvetica', 'bold');
+    pdf.setFont('helvetica', 'normal');
+  } catch (e) {
+    console.error('Failed to register DejaVu fonts for jsPDF', e);
+  }
+};
+
+export const generateReferencePDF = async (
   reference: CompletedReference,
   applicantName: string,
   applicantDOB: string,
   applicantPostcode: string,
   companySettings: CompanySettings = { name: 'Company Name' }
-) => {
+): Promise<jsPDF> => {
   const pdf = new jsPDF();
+  await loadAndRegisterDejaVu(pdf);
   const pageWidth = pdf.internal.pageSize.getWidth();
   const margin = 20;
   const lineHeight = 7;
@@ -134,9 +153,9 @@ export const generateReferencePDF = (
     pdf.text('Are you this person\'s current or previous employer?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    const currentBox = reference.form_data.employmentStatus === 'current' ? '[X]' : '[ ]';
-    const previousBox = reference.form_data.employmentStatus === 'previous' ? '[X]' : '[ ]';
-    const neitherBox = reference.form_data.employmentStatus === 'neither' ? '[X]' : '[ ]';
+    const currentBox = reference.form_data.employmentStatus === 'current' ? '☑' : '☐';
+    const previousBox = reference.form_data.employmentStatus === 'previous' ? '☑' : '☐';
+    const neitherBox = reference.form_data.employmentStatus === 'neither' ? '☑' : '☐';
     pdf.text(`${currentBox} Current    ${previousBox} Previous    ${neitherBox} Neither`, margin, yPosition);
     yPosition += lineHeight + 5;
 

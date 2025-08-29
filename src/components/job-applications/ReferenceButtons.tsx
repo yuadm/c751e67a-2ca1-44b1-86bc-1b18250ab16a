@@ -123,12 +123,12 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
     }
   };
 
-  const downloadCompletedReference = (completedRef: any) => {
+  const downloadCompletedReference = async (completedRef: any) => {
     try {
       const applicantName = application.personal_info?.fullName || 'Unknown Applicant';
       const applicantDOB = application.personal_info?.dateOfBirth || 'Not provided';
       const applicantPostcode = application.personal_info?.postcode || 'Not provided';
-      const pdf = generateReferencePDF(
+      const pdf = await generateReferencePDF(
         completedRef, 
         applicantName, 
         applicantDOB, 
