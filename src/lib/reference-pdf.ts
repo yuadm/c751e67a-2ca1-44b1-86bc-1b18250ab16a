@@ -78,20 +78,21 @@ export const generateReferencePDF = (
   // Add company logo if available
   if (companySettings.logo) {
     try {
-      const logoWidth = 40;
+      const logoWidth = 30;
+      const logoHeight = 12;
       const logoX = (pageWidth / 2) - (logoWidth / 2);
-      pdf.addImage(companySettings.logo, 'JPEG', logoX, yPosition - 5, logoWidth, 20);
-      yPosition += 25;
+      pdf.addImage(companySettings.logo, 'JPEG', logoX, yPosition - 5, logoWidth, logoHeight);
+      yPosition += 15;
     } catch (error) {
       console.error('Error adding logo to PDF:', error);
     }
   }
 
   // Add company name
-  pdf.setFontSize(14);
+  pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
   pdf.text(companySettings.name, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 15;
+  yPosition += 12;
 
   // Helper function to add text with word wrap
   const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 11): number => {
@@ -102,11 +103,11 @@ export const generateReferencePDF = (
   };
 
   // Header
-  pdf.setFontSize(18);
+  pdf.setFontSize(14);
   pdf.setFont('helvetica', 'bold');
   const referenceType = reference.reference_type === 'employer' ? 'Employment reference for' : 'Character reference for';
   pdf.text(referenceType, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 15;
+  yPosition += 12;
 
   // Applicant Information - Horizontal Layout
   pdf.setFontSize(12);
@@ -385,16 +386,20 @@ export const generateManualReferencePDF = (
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 20;
-  const lineHeight = 6;
+  const lineHeight = 7;
   let yPosition = 30;
+
+  // Set font to support Unicode characters
+  pdf.setFont('helvetica', 'normal');
 
   // Add company logo if available
   if (companySettings.logo) {
     try {
-      const logoWidth = 40;
+      const logoWidth = 30;
+      const logoHeight = 12;
       const logoX = (pageWidth / 2) - (logoWidth / 2);
-      pdf.addImage(companySettings.logo, 'JPEG', logoX, yPosition - 5, logoWidth, 20);
-      yPosition += 25;
+      pdf.addImage(companySettings.logo, 'JPEG', logoX, yPosition - 5, logoWidth, logoHeight);
+      yPosition += 15;
     } catch (error) {
       console.error('Error adding logo to PDF:', error);
     }
@@ -402,18 +407,21 @@ export const generateManualReferencePDF = (
 
   // Add company name
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(14);
+  pdf.setFontSize(12);
   pdf.text(companySettings.name, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 15;
+  yPosition += 12;
 
-  const addWrappedText = (text: string, x: number, y: number, maxWidth: number) => {
+  // Helper function to add text with word wrap
+  const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 11): number => {
+    pdf.setFontSize(fontSize);
     const lines = pdf.splitTextToSize(text, maxWidth);
     pdf.text(lines, x, y);
     return y + (lines.length * lineHeight);
   };
 
+  // Helper function to ensure space on page
   const ensureSpace = (needed: number) => {
-    if (yPosition + needed > pageHeight - 20) {
+    if (yPosition + needed > pageHeight - 30) {
       pdf.addPage();
       yPosition = 30;
     }
@@ -421,10 +429,10 @@ export const generateManualReferencePDF = (
 
   // Title
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(18);
+  pdf.setFontSize(14);
   const referenceTitle = data.referenceType === 'employer' ? 'Employment reference for' : 'Character reference for';
   pdf.text(referenceTitle, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 20;
+  yPosition += 12;
 
   // Basic Information - Horizontal Layout
   pdf.setFont('helvetica', 'normal');
@@ -438,33 +446,31 @@ export const generateManualReferencePDF = (
   pdf.text(dobText, margin + nameWidth + 20, yPosition);
   const dobWidth = pdf.getTextWidth(dobText);
   pdf.text(postcodeText, margin + nameWidth + dobWidth + 40, yPosition);
-  yPosition += 20;
+  yPosition += 15;
 
   // Referee Information
-  ensureSpace(30);
   pdf.setFont('helvetica', 'bold');
   pdf.text('Referee Name:', margin, yPosition);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(data.referee.name || '', margin + 80, yPosition);
-  yPosition += lineHeight + 2;
+  pdf.text(data.referee.name || '', margin + 70, yPosition);
   
   if (data.referee.jobTitle) {
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Job Title:', margin + 200, yPosition - (lineHeight + 2));
+    pdf.text('Job Title:', margin + 200, yPosition);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(data.referee.jobTitle, margin + 250, yPosition - (lineHeight + 2));
+    pdf.text(data.referee.jobTitle, margin + 250, yPosition);
   }
   yPosition += 15;
 
-  // Reference Type Specific Questions
+  // Reference specific content
+  ensureSpace(60);
   if (data.referenceType === 'employer') {
     // Employment Status
-    ensureSpace(30);
     pdf.setFont('helvetica', 'bold');
     pdf.text('Are you this person\'s current or previous employer?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    pdf.text('[ ] Current    [ ] Previous    [ ] Neither', margin, yPosition);
+    pdf.text('[X] Current    [ ] Previous    [ ] Neither', margin, yPosition);
     yPosition += lineHeight + 2;
 
     // Relationship Description
@@ -473,7 +479,7 @@ export const generateManualReferencePDF = (
     pdf.text('What is your relationship to this person (e.g. "I am her/his manager")?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    yPosition = addWrappedText(`${data.referee.jobTitle || 'Not provided'}`, margin, yPosition, pageWidth - 2 * margin);
+    yPosition = addWrappedText(`${data.referee.jobTitle || ''}`, margin, yPosition, pageWidth - 2 * margin);
     yPosition += 2;
 
     // Job Title
@@ -482,7 +488,7 @@ export const generateManualReferencePDF = (
     pdf.text('Please state the person\'s job title:', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    pdf.text(`${data.applicantPosition || 'Not provided'}`, margin, yPosition);
+    pdf.text(`${data.applicantPosition || ''}`, margin, yPosition);
     yPosition += lineHeight + 2;
 
     // Employment Dates
@@ -491,29 +497,27 @@ export const generateManualReferencePDF = (
     pdf.text('Employment Period:', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    const startDate = data.employmentFrom ? new Date(data.employmentFrom).toLocaleDateString() : 'Not provided';
-    const endDate = data.employmentTo ? new Date(data.employmentTo).toLocaleDateString() : 'Not provided';
+    const startDate = data.employmentFrom || '';
+    const endDate = data.employmentTo || '';
     pdf.text(`From ${startDate} to ${endDate}`, margin, yPosition);
     yPosition += lineHeight + 2;
 
-    // Attendance Record
-    ensureSpace(25);
+    // Attendance
+    ensureSpace(20);
     pdf.setFont('helvetica', 'bold');
     pdf.text('How would you describe their recent attendance record?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
     pdf.text('[X] Good    [ ] Average    [ ] Poor', margin, yPosition);
-    yPosition += lineHeight + 5;
+    yPosition += lineHeight + 2;
 
-    // Reason for Leaving
+    // Leaving Reason
     ensureSpace(30);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Why did the person leave your employment (if they are still employed, please write \'still', margin, yPosition);
-    yPosition += lineHeight;
-    pdf.text('employed\')?', margin, yPosition);
+    pdf.text('Why did the person leave your employment (if they are still employed, please write \'still employed\')?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    yPosition = addWrappedText(`${data.reasonForLeaving || 'Not provided'}`, margin, yPosition, pageWidth - 2 * margin);
+    yPosition = addWrappedText(`${data.reasonForLeaving || ''}`, margin, yPosition, pageWidth - 2 * margin);
     yPosition += 2;
   } else {
     // Character reference specific content
@@ -547,21 +551,21 @@ export const generateManualReferencePDF = (
     'Reliable and punctual',
     'Suitable for the position applied for',
     'Kind and compassionate',
-    'Able to work well without close supervision'
+    'Able to work well without close supervision',
   ];
 
   pdf.setFont('helvetica', 'normal');
   
-  // Display qualities in 2 columns - All selected
+  // Display qualities in 2 columns
   const columnWidth = (pageWidth - 2 * margin) / 2;
   for (let i = 0; i < qualities.length; i += 2) {
     ensureSpace(8);
     
-    // Left column quality
+    // Left column quality - all ticked
     pdf.text('[X]', margin, yPosition);
     pdf.text(qualities[i], margin + 10, yPosition);
     
-    // Right column quality (if exists)
+    // Right column quality (if exists) - all ticked
     if (i + 1 < qualities.length) {
       const rightStartX = margin + columnWidth;
       pdf.text('[X]', rightStartX, yPosition);
@@ -571,50 +575,79 @@ export const generateManualReferencePDF = (
     yPosition += lineHeight;
   }
 
-  yPosition += 4;
+  // Qualities not ticked reason
+  ensureSpace(30);
+  yPosition += 3;
   pdf.setFont('helvetica', 'bold');
   pdf.text('If you did not tick one or more of the above, please tell us why here:', margin, yPosition);
-  yPosition += lineHeight + 5;
+  yPosition += lineHeight;
+  pdf.setFont('helvetica', 'normal');
+  yPosition = addWrappedText('Not provided', margin, yPosition, pageWidth - 2 * margin);
+  yPosition += 5;
 
-  // Criminal Background Questions
-  ensureSpace(80);
+  // Criminal background questions - CRITICAL SECTION
+  ensureSpace(100);
   pdf.setFont('helvetica', 'bold');
-  yPosition = addWrappedText('The position this person has applied for involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that the person may have received that are not \'protected\' as defined by the Rehabilitation of Offenders Act 1974 (Exceptions) Order 1975 (as amended in 2013 by SI 210 1198)?', margin, yPosition, pageWidth - 2 * margin);
+  pdf.setFontSize(12);
+  pdf.text('CRIMINAL BACKGROUND CHECK', margin, yPosition);
+  yPosition += lineHeight + 3;
+  
+  pdf.setFontSize(11);
+  yPosition = addWrappedText('The position this person has applied for involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that the person may have received that are not \'protected\' as defined by the Rehabilitation of Offenders Act 1974 (Exceptions) Order 1975 (as amended in 2013 by SI 210 1198)?', margin, yPosition, pageWidth - 2 * margin, 11);
   yPosition += 3;
   pdf.setFont('helvetica', 'normal');
   pdf.text('[ ] Yes    [X] No', margin, yPosition);
-  yPosition += 8;
+  yPosition += lineHeight + 8;
 
+  ensureSpace(50);
+  pdf.setFont('helvetica', 'bold');
+  yPosition = addWrappedText('To your knowledge, is this person currently the subject of any criminal proceedings (for example, charged or summoned but not yet dealt with) or any police investigation?', margin, yPosition, pageWidth - 2 * margin, 11);
+  yPosition += 3;
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('[ ] Yes    [X] No', margin, yPosition);
+  yPosition += lineHeight + 8;
+
+  // Additional Comments
   ensureSpace(40);
   pdf.setFont('helvetica', 'bold');
-  yPosition = addWrappedText('To your knowledge, is this person currently the subject of any criminal proceedings (for example, charged or summoned but not yet dealt with) or any police investigation?', margin, yPosition, pageWidth - 2 * margin);
-  yPosition += 3;
+  pdf.text('Any additional comments you would like to make about this person:', margin, yPosition);
+  yPosition += lineHeight;
   pdf.setFont('helvetica', 'normal');
-  pdf.text('[ ] Yes    [X] No', margin, yPosition);
-  yPosition += 8;
+  yPosition = addWrappedText('Not provided', margin, yPosition, pageWidth - 2 * margin);
+  yPosition += 10;
 
-  ensureSpace(30);
+  // Referee Information
+  ensureSpace(40);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('If you answered \'yes\' to either of the two previous questions, please provide details:', margin, yPosition);
+  pdf.text('REFEREE INFORMATION', margin, yPosition);
+  yPosition += lineHeight + 3;
+  
+  pdf.text('Referee Name:', margin, yPosition);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.referee.name || '', margin + 70, yPosition);
+  yPosition += lineHeight;
+
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Referee Job Title:', margin, yPosition);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.referee.jobTitle || '', margin + 85, yPosition);
   yPosition += lineHeight + 5;
 
-  ensureSpace(30);
+  // Declaration and Date
+  ensureSpace(50);
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Please tell us anything else about this person that you think we should know:', margin, yPosition);
-  yPosition += lineHeight + 15;
-
-  ensureSpace(25);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Please sign and date your reference here:', margin, yPosition);
-  yPosition += 10;
+  pdf.text('DECLARATION', margin, yPosition);
+  yPosition += lineHeight + 3;
+  pdf.setFont('helvetica', 'normal');
+  const declarationText = 'I certify that, to the best of my knowledge, the information I have given is true and complete. I understand that any deliberate omission, falsification or misrepresentation may lead to refusal of appointment or dismissal.';
+  yPosition = addWrappedText(declarationText, margin, yPosition, pageWidth - 2 * margin);
+  yPosition += 8;
   
+  const signatureKey = data.referenceType === 'employer' ? 'R1_signed' : 'R2_signed';
   pdf.setFont('helvetica', 'bold');
-  pdf.text('Signature:', margin, yPosition);
-  yPosition += lineHeight + 2;
-  
-  const dateLabel = data.referenceType === 'employer' ? 'Date: {R1_signed}' : 'Date: {R2_signed}';
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(dateLabel, margin, yPosition);
+  pdf.text('Date of completion:', margin, yPosition);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`{${signatureKey}}`, margin + 100, yPosition);
 
   return pdf;
 };
