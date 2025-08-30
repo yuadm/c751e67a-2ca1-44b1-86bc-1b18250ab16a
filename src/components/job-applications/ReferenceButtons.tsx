@@ -179,16 +179,8 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
     }
   };
 
-  const downloadCompletedReference = async (completedRef: any) => {
+  const downloadCompletedReference = (completedRef: any) => {
     try {
-      // Fetch reference request data for tracking information
-      const { data: referenceRequestData } = await supabase
-        .from('reference_requests')
-        .select('created_at, completed_at, reference_name, reference_email')
-        .eq('application_id', application.id)
-        .eq('reference_email', completedRef.reference_email)
-        .single();
-
       const applicantName = application.personal_info?.fullName || 'Unknown Applicant';
       const applicantDOB = application.personal_info?.dateOfBirth || 'Not provided';
       const applicantPostcode = application.personal_info?.postcode || 'Not provided';
@@ -197,8 +189,7 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
         applicantName, 
         applicantDOB, 
         applicantPostcode, 
-        { name: companySettings.name, logo: companySettings.logo },
-        referenceRequestData || undefined
+        { name: companySettings.name, logo: companySettings.logo }
       );
       
       const fileName = `reference-${completedRef.reference_name.replace(/\s+/g, '-')}-${applicantName.replace(/\s+/g, '-')}.pdf`;
@@ -222,16 +213,8 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
     return completedReferences.find(ref => ref.reference_email === email);
   };
 
-  const generateBlankPDF = async (referenceKey: string, reference: any) => {
+  const generateBlankPDF = (referenceKey: string, reference: any) => {
     try {
-      // Fetch reference request data for tracking information if available
-      const { data: referenceRequestData } = await supabase
-        .from('reference_requests')
-        .select('created_at, completed_at, reference_name, reference_email')
-        .eq('application_id', application.id)
-        .eq('reference_email', reference.email)
-        .single();
-
       const personalInfo = application.personal_info || {};
       const applicantName = personalInfo.fullName || 'Unknown Applicant';
       const { type: refType, matchedEmployer } = getReferenceDetails(application, referenceKey as 'reference1' | 'reference2');
@@ -279,7 +262,7 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
           town: reference.town,
           postcode: reference.postcode,
         },
-      }, { name: companySettings.name, logo: companySettings.logo }, referenceRequestData || undefined);
+      }, { name: companySettings.name, logo: companySettings.logo });
 
       const fileName = `manual-reference-${reference.name?.replace(/\s+/g, '-') || referenceKey}-${applicantName.replace(/\s+/g, '-')}.pdf`;
       pdf.save(fileName);
