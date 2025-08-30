@@ -366,6 +366,8 @@ export interface ManualReferenceInput {
   employmentFrom?: string;
   employmentTo?: string;
   reasonForLeaving?: string;
+  employmentStatus?: 'current' | 'previous' | 'neither';
+  referenceNumber?: number;
   referee: {
     name?: string;
     company?: string;
@@ -465,21 +467,25 @@ export const generateManualReferencePDF = (
   // Reference specific content
   ensureSpace(60);
   if (data.referenceType === 'employer') {
-    // Employment Status
+    // Employment Status with proper checkboxes
     pdf.setFont('helvetica', 'bold');
     pdf.text('Are you this person\'s current or previous employer?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    pdf.text('[X] Current    [ ] Previous    [ ] Neither', margin, yPosition);
+    
+    const currentCheck = data.employmentStatus === 'current' ? '☑' : '☐';
+    const previousCheck = data.employmentStatus === 'previous' ? '☑' : '☐';
+    const neitherCheck = data.employmentStatus === 'neither' ? '☑' : '☐';
+    pdf.text(`${currentCheck} Current    ${previousCheck} Previous    ${neitherCheck} Neither`, margin, yPosition);
     yPosition += lineHeight + 2;
 
-    // Relationship Description
+    // Relationship Description - leave blank
     ensureSpace(25);
     pdf.setFont('helvetica', 'bold');
     pdf.text('What is your relationship to this person (e.g. "I am her/his manager")?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    yPosition = addWrappedText(`${data.referee.jobTitle || ''}`, margin, yPosition, pageWidth - 2 * margin);
+    yPosition = addWrappedText('', margin, yPosition, pageWidth - 2 * margin);
     yPosition += 2;
 
     // Job Title
@@ -502,13 +508,13 @@ export const generateManualReferencePDF = (
     pdf.text(`From ${startDate} to ${endDate}`, margin, yPosition);
     yPosition += lineHeight + 2;
 
-    // Attendance
+    // Attendance - leave unchecked
     ensureSpace(20);
     pdf.setFont('helvetica', 'bold');
     pdf.text('How would you describe their recent attendance record?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    pdf.text('[X] Good    [ ] Average    [ ] Poor', margin, yPosition);
+    pdf.text('☐ Good    ☐ Average    ☐ Poor', margin, yPosition);
     yPosition += lineHeight + 2;
 
     // Leaving Reason
@@ -526,14 +532,14 @@ export const generateManualReferencePDF = (
     pdf.text('Do you know this person from outside employment or education?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    pdf.text('[X] Yes    [ ] No', margin, yPosition);
+    pdf.text('☐ Yes    ☐ No', margin, yPosition);
     yPosition += lineHeight + 5;
 
     pdf.setFont('helvetica', 'bold');
     pdf.text('Please describe your relationship with this person, including how long you have known them:', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    yPosition = addWrappedText('Not provided', margin, yPosition, pageWidth - 2 * margin);
+    yPosition = addWrappedText('', margin, yPosition, pageWidth - 2 * margin);
     yPosition += 5;
   }
 
@@ -556,19 +562,19 @@ export const generateManualReferencePDF = (
 
   pdf.setFont('helvetica', 'normal');
   
-  // Display qualities in 2 columns
+  // Display qualities in 2 columns - leave unchecked by default
   const columnWidth = (pageWidth - 2 * margin) / 2;
   for (let i = 0; i < qualities.length; i += 2) {
     ensureSpace(8);
     
-    // Left column quality - all ticked
-    pdf.text('[X]', margin, yPosition);
+    // Left column quality - unchecked
+    pdf.text('☐', margin, yPosition);
     pdf.text(qualities[i], margin + 10, yPosition);
     
-    // Right column quality (if exists) - all ticked
+    // Right column quality (if exists) - unchecked
     if (i + 1 < qualities.length) {
       const rightStartX = margin + columnWidth;
-      pdf.text('[X]', rightStartX, yPosition);
+      pdf.text('☐', rightStartX, yPosition);
       pdf.text(qualities[i + 1], rightStartX + 10, yPosition);
     }
     
@@ -582,7 +588,7 @@ export const generateManualReferencePDF = (
   pdf.text('If you did not tick one or more of the above, please tell us why here:', margin, yPosition);
   yPosition += lineHeight;
   pdf.setFont('helvetica', 'normal');
-  yPosition = addWrappedText('Not provided', margin, yPosition, pageWidth - 2 * margin);
+  yPosition = addWrappedText('', margin, yPosition, pageWidth - 2 * margin);
   yPosition += 5;
 
   // Criminal background questions - CRITICAL SECTION
@@ -596,7 +602,7 @@ export const generateManualReferencePDF = (
   yPosition = addWrappedText('The position this person has applied for involves working with vulnerable people. Are you aware of any convictions, cautions, reprimands or final warnings that the person may have received that are not \'protected\' as defined by the Rehabilitation of Offenders Act 1974 (Exceptions) Order 1975 (as amended in 2013 by SI 210 1198)?', margin, yPosition, pageWidth - 2 * margin, 11);
   yPosition += 3;
   pdf.setFont('helvetica', 'normal');
-  pdf.text('[ ] Yes    [X] No', margin, yPosition);
+  pdf.text('☐ Yes    ☐ No', margin, yPosition);
   yPosition += lineHeight + 8;
 
   ensureSpace(50);
@@ -604,7 +610,7 @@ export const generateManualReferencePDF = (
   yPosition = addWrappedText('To your knowledge, is this person currently the subject of any criminal proceedings (for example, charged or summoned but not yet dealt with) or any police investigation?', margin, yPosition, pageWidth - 2 * margin, 11);
   yPosition += 3;
   pdf.setFont('helvetica', 'normal');
-  pdf.text('[ ] Yes    [X] No', margin, yPosition);
+  pdf.text('☐ Yes    ☐ No', margin, yPosition);
   yPosition += lineHeight + 8;
 
   // Additional Comments
@@ -613,7 +619,7 @@ export const generateManualReferencePDF = (
   pdf.text('Any additional comments you would like to make about this person:', margin, yPosition);
   yPosition += lineHeight;
   pdf.setFont('helvetica', 'normal');
-  yPosition = addWrappedText('Not provided', margin, yPosition, pageWidth - 2 * margin);
+  yPosition = addWrappedText('', margin, yPosition, pageWidth - 2 * margin);
   yPosition += 10;
 
   // Referee Information
@@ -643,11 +649,11 @@ export const generateManualReferencePDF = (
   yPosition = addWrappedText(declarationText, margin, yPosition, pageWidth - 2 * margin);
   yPosition += 8;
   
-  const signatureKey = data.referenceType === 'employer' ? 'R1_signed' : 'R2_signed';
+  const signatureKey = `R${data.referenceNumber || 1}_signed`;
   pdf.setFont('helvetica', 'bold');
   pdf.text('Date of completion:', margin, yPosition);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(`{${signatureKey}}`, margin + 100, yPosition);
+  pdf.text('', margin + 100, yPosition);
 
   return pdf;
 };

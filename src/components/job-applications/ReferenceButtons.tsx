@@ -41,39 +41,95 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
     }
   };
 
-  // Count employers to determine reference types
-  const countEmployers = (application: any) => {
-    let count = 0;
+  // Get all employers from employment history
+  const getAllEmployers = (application: any) => {
     const employmentHistory = application.employment_history;
+    const employers = [];
     
-    if (!employmentHistory) return 0;
+    if (!employmentHistory) return [];
     
-    // Count recent employer if present
+    // Add recent employer
     if (employmentHistory.recentEmployer?.company?.trim() || employmentHistory.recentEmployer?.name?.trim()) {
-      count += 1;
+      employers.push({
+        ...employmentHistory.recentEmployer,
+        isRecent: true
+      });
     }
     
-    // Count previous employers
+    // Add previous employers
     if (employmentHistory.previousEmployers?.length) {
-      count += employmentHistory.previousEmployers.filter((emp: any) => 
+      employers.push(...employmentHistory.previousEmployers.filter((emp: any) => 
         emp.company?.trim() || emp.name?.trim()
-      ).length;
+      ).map((emp: any) => ({ ...emp, isRecent: false })));
     }
     
-    return count;
+    return employers;
   };
 
-  // Determine reference type for specific reference
-  const referenceTypeForKey = (application: any, referenceKey: 'reference1' | 'reference2') => {
-    const employerCount = countEmployers(application);
+  // Find matching employer for a reference
+  const findEmployerMatch = (reference: any, employers: any[]) => {
+    if (!reference || !employers?.length) return null;
     
-    if (employerCount >= 2) {
-      return 'employer';
-    } else if (employerCount === 1) {
-      return referenceKey === 'reference1' ? 'employer' : 'character';
-    } else {
-      return 'character';
+    // Try to match by company name (case-insensitive)
+    const refCompany = reference.company?.trim().toLowerCase();
+    if (refCompany) {
+      const match = employers.find(emp => 
+        emp.company?.trim().toLowerCase() === refCompany
+      );
+      if (match) return match;
     }
+    
+    // Try to match by contact name (case-insensitive)
+    const refName = reference.name?.trim().toLowerCase();
+    if (refName) {
+      const match = employers.find(emp => 
+        emp.name?.trim().toLowerCase() === refName
+      );
+      if (match) return match;
+    }
+    
+    // Try to match by email
+    const refEmail = reference.email?.trim().toLowerCase();
+    if (refEmail) {
+      const match = employers.find(emp => 
+        emp.email?.trim().toLowerCase() === refEmail
+      );
+      if (match) return match;
+    }
+    
+    return null;
+  };
+
+  // Determine reference type and matching employer for specific reference
+  const getReferenceDetails = (application: any, referenceKey: 'reference1' | 'reference2') => {
+    const employers = getAllEmployers(application);
+    const reference = application.reference_info?.[referenceKey];
+    
+    if (!reference) {
+      return { type: 'character', matchedEmployer: null };
+    }
+    
+    const matchedEmployer = findEmployerMatch(reference, employers);
+    
+    if (matchedEmployer) {
+      return { type: 'employer', matchedEmployer };
+    }
+    
+    // Fallback to positional logic if no match found
+    if (employers.length >= 2) {
+      return { type: 'employer', matchedEmployer: null };
+    } else if (employers.length === 1) {
+      const type = referenceKey === 'reference1' ? 'employer' : 'character';
+      const matchedEmployer = type === 'employer' ? employers[0] : null;
+      return { type, matchedEmployer };
+    } else {
+      return { type: 'character', matchedEmployer: null };
+    }
+  };
+
+  // Helper function for backward compatibility
+  const referenceTypeForKey = (application: any, referenceKey: 'reference1' | 'reference2') => {
+    return getReferenceDetails(application, referenceKey).type;
   };
 
   const sendReferenceEmail = async (referenceKey: string, reference: any) => {
@@ -161,20 +217,41 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
     try {
       const personalInfo = application.personal_info || {};
       const applicantName = personalInfo.fullName || 'Unknown Applicant';
-      const refType = referenceTypeForKey(application, referenceKey as 'reference1' | 'reference2');
+      const { type: refType, matchedEmployer } = getReferenceDetails(application, referenceKey as 'reference1' | 'reference2');
 
-      const employmentHistory = application.employment_history || {};
-      const recentEmployer = employmentHistory.recentEmployer || {};
+      // Use matched employer data if available, otherwise use defaults
+      let employmentFrom = '';
+      let employmentTo = '';
+      let reasonForLeaving = '';
+      let employmentStatus = 'neither';
+
+      if (refType === 'employer' && matchedEmployer) {
+        employmentFrom = matchedEmployer.from || '';
+        employmentTo = matchedEmployer.to || '';
+        reasonForLeaving = matchedEmployer.reasonForLeaving || '';
+        
+        // Determine employment status
+        const today = new Date();
+        const endDate = matchedEmployer.to ? new Date(matchedEmployer.to) : null;
+        
+        if (!matchedEmployer.to || endDate > today) {
+          employmentStatus = 'current';
+        } else {
+          employmentStatus = 'previous';
+        }
+      }
       
       const pdf = generateManualReferencePDF({
         applicantName,
         applicantPosition: personalInfo.positionAppliedFor,
-        referenceType: refType,
+        referenceType: refType as 'employer' | 'character',
         applicantDOB: personalInfo.dateOfBirth,
         applicantPostcode: personalInfo.postcode,
-        employmentFrom: recentEmployer.from,
-        employmentTo: recentEmployer.to,
-        reasonForLeaving: recentEmployer.reasonForLeaving,
+        employmentFrom,
+        employmentTo,
+        reasonForLeaving,
+        employmentStatus: employmentStatus as 'current' | 'previous' | 'neither',
+        referenceNumber: referenceKey === 'reference1' ? 1 : 2,
         referee: {
           name: reference.name,
           company: reference.company,
