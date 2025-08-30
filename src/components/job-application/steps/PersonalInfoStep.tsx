@@ -192,7 +192,6 @@ export function PersonalInfoStep({ data, updateData }: PersonalInfoStepProps) {
               updateData('dateOfBirth', date ? date.toISOString().split('T')[0] : '');
             }}
             placeholder="Select date of birth"
-            disabled={(date) => date > new Date()}
           />
         </div>
 
