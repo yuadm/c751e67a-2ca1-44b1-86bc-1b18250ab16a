@@ -479,13 +479,13 @@ export const generateManualReferencePDF = (
     pdf.text(`${currentCheck} Current    ${previousCheck} Previous    ${neitherCheck} Neither`, margin, yPosition);
     yPosition += lineHeight + 2;
 
-    // Relationship Description - leave blank
+    // Relationship Description - prefill with Referee Job Title
     ensureSpace(25);
     pdf.setFont('helvetica', 'bold');
     pdf.text('What is your relationship to this person (e.g. "I am her/his manager")?', margin, yPosition);
     yPosition += lineHeight;
     pdf.setFont('helvetica', 'normal');
-    yPosition = addWrappedText('', margin, yPosition, pageWidth - 2 * margin);
+    yPosition = addWrappedText(`${data.referee.jobTitle || ''}`, margin, yPosition, pageWidth - 2 * margin);
     yPosition += 2;
 
     // Job Title

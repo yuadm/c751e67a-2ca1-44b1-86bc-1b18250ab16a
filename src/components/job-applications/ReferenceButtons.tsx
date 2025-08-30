@@ -243,7 +243,7 @@ export function ReferenceButtons({ application, references, onUpdate }: Referenc
       
       const pdf = generateManualReferencePDF({
         applicantName,
-        applicantPosition: personalInfo.positionAppliedFor,
+        applicantPosition: refType === 'employer' ? (matchedEmployer?.position || application.employment_history?.recentEmployer?.position || '') : personalInfo.positionAppliedFor,
         referenceType: refType as 'employer' | 'character',
         applicantDOB: personalInfo.dateOfBirth,
         applicantPostcode: personalInfo.postcode,
